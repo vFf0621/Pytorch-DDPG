@@ -176,7 +176,7 @@ class DDPG:
            target_q = rewards + self.gamma * l
 
         q = self.critic(states, actions)
-        critic_loss = self.loss(q, target_q.unsqueeze(-1))
+        critic_loss = self.loss(target_q.unsqueeze(-1),q)
 
         self.critic.optim.zero_grad()
         critic_loss.backward()
