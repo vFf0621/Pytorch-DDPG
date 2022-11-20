@@ -89,7 +89,7 @@ class DDPG:
         self.target_actor = Actor(env=self.env).to(self.device)
         self.target_critic = Critic(env=self.env).to(self.device)
         self.gamma = 0.99
-        self.tau = 0.001
+        self.tau = 0.005
         self.actor.load_state_dict(self.target_actor.state_dict())
         self.critic.load_state_dict(self.target_critic.state_dict())
         self.replay_buffer = deque(maxlen=1000000)
