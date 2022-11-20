@@ -155,7 +155,8 @@ class DDPG:
     def train(self):
     
         states, actions, states_, rewards, dones = self.sample()
-
+        target_action = self.target_actor(states_) + \
+        torch.clip(torch.normal(torch.tensor[0.], std=torch.tensor([0.2]), -0.5, 0.5)
         q_ = self.target_critic(states_, self.target_actor(states_)).view(-1)
         q_[dones]=0.
         with torch.no_grad(): 
