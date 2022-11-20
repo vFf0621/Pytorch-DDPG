@@ -152,7 +152,7 @@ class DDPG:
         
         return states, actions, states_, rewards, dones
         
-    def train(self):
+    def train(self, i):
     
         states, actions, states_, rewards, dones = self.sample()
         target_action = self.target_actor(states_) + \
@@ -168,12 +168,11 @@ class DDPG:
         self.critic.optim.zero_grad()
         critic_loss.backward()
         self.critic.optim.step()
-
-        actor_loss = -self.critic(states, self.actor(states)).mean()
-
-        self.actor.optim.zero_grad()
-        actor_loss.backward()
-        self.actor.optim.step()
-        self.soft_update()
+        if i % 2 == 0:
+            actor_loss = -self.critic(states, self.actor(states)).mean()
+            self.actor.optim.zero_grad()
+            actor_loss.backward()
+            self.actor.optim.step()
+            self.soft_update()
         
         
