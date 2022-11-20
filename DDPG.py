@@ -45,12 +45,7 @@ class Actor(nn.Module):
         x = self.linear3(x)
         x = self.tanh(x)
         return x + torch.tensor(self.stochastic_process.sample(),
-                                dtype=torch.float32).cuda()
-    def train(self, loss):
-        self.optim.zero_grad()
-        loss.backward()
-        self.optim.step()
-    
+                                dtype=torch.float32).cuda()    
     
 class Critic(nn.Module):
     def __init__(self, env, hidden=400, lr = 0.0001):
@@ -117,10 +112,7 @@ class DDPG:
         
         return torch.clip(self.actor(state), -self.action_high, 
                           self.action_high).cpu().detach().tolist()
-    
-    def evaluate(self, state):
-        return self.critic(state, self.act(state))
-    
+        
     def soft_update(self):
         for param, target_param in zip(self.critic.parameters(),
                                        self.target_critic.parameters()):
@@ -164,19 +156,13 @@ class DDPG:
     
         states, actions, states_, rewards, dones = self.sample()
 
-        l = []
-        q_ = self.target_critic(states_, self.target_actor(states_)).\
-        squeeze(-1).tolist()
-        not_dones = (1-dones).tolist()
-        for i in range(len(q_)):
-            l.append(q_[i]*not_dones[i])
-        l = np.array(l)
-        l = torch.from_numpy(l).float().to(self.device)
+        q_ = self.target_critic(states_, self.target_actor(states_)).view(-1)
+        q_[dones]=0.
         with torch.no_grad(): 
-           target_q = rewards + self.gamma * l
+           target_q = rewards + self.gamma * q_
 
         q = self.critic(states, actions)
-        critic_loss = self.loss(target_q.unsqueeze(-1),q)
+        critic_loss = self.loss(target_q,q)
 
         self.critic.optim.zero_grad()
         critic_loss.backward()
