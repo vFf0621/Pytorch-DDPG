@@ -50,10 +50,10 @@ class Actor(nn.Module):
 class Critic(nn.Module):
     def __init__(self, env, hidden=300, lr = 0.001):
         super().__init__()
-        self.linear1= nn.Linear(env.observation_space.shape[0], 
-                                           hidden + 100)
+        self.linear1= nn.Linear(env.observation_space.shape[0]+ 
+                                env.action_space.shape[0], hidden + 100)
         self.relu=nn.ReLU()
-        self.linear2 = nn.Linear(hidden + 100 + env.action_space.shape[0], hidden)
+        self.linear2 = nn.Linear(hidden + 100 , hidden)
                                  
         self.linear3 = nn.Linear(hidden, 1)
         self.optim = optim.Adam(self.parameters(), lr = lr)
@@ -71,9 +71,9 @@ class Critic(nn.Module):
     def forward(self, state, action):
         if len(action.shape) < len(state.shape):
             action = action.unsqueeze(-1)
-        x = self.linear1(state)
+        x = self.linear1(torch.cat([state, action], dim=1))
         x = self.relu(x)
-        x = self.linear2(torch.cat([x, action], dim=1))
+        x = self.linear2(x)
         x = self.relu(x)
         x = self.linear3(x)
 
