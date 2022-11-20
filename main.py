@@ -21,11 +21,11 @@ if __name__ == '__main__':
     for j in range(eps):
         done = False
         episode_reward = 0
-        s = env.reset()
+        s = env.reset()[0]
         agent.actor.stochastic_process.reset_states()
         while not done:
             action = agent.act(s)
-            s_, r, done, _ = env.step(action)
+            s_, r, done, _, _ = env.step(action)
             agent.replay_buffer.append((s, action, s_, r, done))
             s = s_
             episode_reward += r
