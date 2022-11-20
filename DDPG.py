@@ -102,7 +102,7 @@ class DDPG:
             done = False
             while not done:
                 action = self.env.action_space.sample()
-                s_, reward, done, _ = self.env.step(action)
+                s_, reward, done, _, _ = self.env.step(action)
                 self.replay_buffer.append((s, action, s_, reward, done))
                 s = s_
     def act(self, state):
