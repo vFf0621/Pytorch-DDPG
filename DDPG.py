@@ -16,7 +16,7 @@ import random
 import stochastic_process
 import numpy as np
 class Actor(nn.Module):
-    def __init__(self, env, hidden = 300, lr = 0.0001):
+    def __init__(self, env, hidden = 300, lr = 0.001):
         super().__init__()
         self.linear1 = nn.Linear(env.observation_space.shape[0], 
                                            hidden + 100)
@@ -48,7 +48,7 @@ class Actor(nn.Module):
                                 dtype=torch.float32).cuda()    
     
 class Critic(nn.Module):
-    def __init__(self, env, hidden=300, lr = 0.0001):
+    def __init__(self, env, hidden=300, lr = 0.001):
         super().__init__()
         self.linear1= nn.Linear(env.observation_space.shape[0], 
                                            hidden + 100)
