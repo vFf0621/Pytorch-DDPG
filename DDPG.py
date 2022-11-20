@@ -97,6 +97,7 @@ class DDPG:
         self.reward_buffer = deque(maxlen=100)
         self.action_high = torch.from_numpy(self.env.action_space.high).\
         to(self.device)
+        self.count = 0
         s = env.reset()[0]
         for i in range(100):
             done = False
@@ -152,7 +153,7 @@ class DDPG:
         
         return states, actions, states_, rewards, dones
         
-    def train(self, i):
+    def train(self):
     
         states, actions, states_, rewards, dones = self.sample()
         target_action = self.target_actor(states_) + \
@@ -168,11 +169,11 @@ class DDPG:
         self.critic.optim.zero_grad()
         critic_loss.backward()
         self.critic.optim.step()
-        if i % 2 == 0:
+        if self.count % 2 == 0:
             actor_loss = -self.critic(states, self.actor(states)).mean()
             self.actor.optim.zero_grad()
             actor_loss.backward()
             self.actor.optim.step()
             self.soft_update()
         
-        
+        self.count += 1
