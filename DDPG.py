@@ -97,7 +97,7 @@ class DDPG:
         self.reward_buffer = deque(maxlen=100)
         self.action_high = torch.from_numpy(self.env.action_space.high).\
         to(self.device)
-        s = env.reset()
+        s = env.reset()[0]
         for i in range(100):
             done = False
             while not done:
