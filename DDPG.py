@@ -94,7 +94,7 @@ class DDPG:
         self.critic.load_state_dict(self.target_critic.state_dict())
         self.replay_buffer = deque(maxlen=1000000)
         self.loss = torch.nn.MSELoss()
-        self.reward_buffer = deque(maxlen=1000)
+        self.reward_buffer = deque(maxlen=100)
         self.action_high = torch.from_numpy(self.env.action_space.high).\
         to(self.device)
         s = env.reset()
@@ -123,7 +123,7 @@ class DDPG:
                         self.target_actor.parameters()):
              target_param.data.copy_(self.tau * param.data + 
                                 (1 - self.tau) * target_param.data)
-    def sample(self, batch_size = 64):
+    def sample(self, batch_size = 100):
         t = random.sample(self.replay_buffer, batch_size)
         actions = []
         states = []
