@@ -11,4 +11,4 @@ Mujoco 2.3.0
 
 Run main.py directly to start training.
 
-![inverted_pendulum](https://user-images.githubusercontent.com/29249318/204061714-fcb96bb5-a0ce-4e4e-beeb-c5a83eb47f59.gif)
+![6381494b3b705800180237](https://user-images.githubusercontent.com/29249318/204061861-a76f8993-548b-4c74-974b-fae46c1a3376.gif)
