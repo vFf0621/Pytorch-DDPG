@@ -38,6 +38,7 @@ class Actor(nn.Module):
         self.optim = optim.Adam(self.parameters(), lr = lr)
         self.stochastic_process = stochastic_process.OrnsteinUhlenbeckProcess()
     def forward(self, state):
+        state=state.float()
         x = self.linear1(state)
         x = self.relu(x)
         x = self.linear2(x)
@@ -148,7 +149,7 @@ class DDPG:
         rewards = torch.from_numpy(np.array(rewards)).\
             to(self.device).float()
         dones = torch.from_numpy(np.array(dones)).\
-            to(self.device).float()
+            to(self.device)
         states_ = torch.from_numpy(np.array(states_)).to(self.device).float()
         
         return states, actions, states_, rewards, dones
@@ -157,13 +158,13 @@ class DDPG:
     
         states, actions, states_, rewards, dones = self.sample()
         target_action = self.target_actor(states_) + \
-        torch.clip(torch.normal(torch.tensor[0.], std=torch.tensor([0.2]), -0.5, 0.5)
+        torch.clip(torch.normal(torch.tensor([0.]), torch.tensor([0.2])), -0.5, 0.5).to(self.device)
         q_ = self.target_critic(states_, self.target_actor(states_)).view(-1)
         q_[dones]=0.
         with torch.no_grad(): 
            target_q = rewards + self.gamma * q_
 
-        q = self.critic(states, actions)
+        q = self.critic(states, actions).view(-1)
         critic_loss = self.loss(target_q,q)
 
         self.critic.optim.zero_grad()
