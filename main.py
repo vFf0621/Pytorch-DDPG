@@ -12,17 +12,16 @@ from gym import wrappers
 from DDPG import *
 import matplotlib.pyplot as plt
 if __name__ == '__main__':
-    env = gym.make('Pendulum-v1')
+    env = gym.make('InvertedPendulum-v4', render_mode='human')
     agent = DDPG(env)
     ys = []
-    eps = 1000
+    eps = 10000
     xs = list(range(eps))
     print("Replay Buffer Initialized")
     for j in range(eps):
         done = False
         episode_reward = 0
         s = env.reset()[0]
-        agent.actor.stochastic_process.reset_states()
         while not done:
             action = agent.act(s)
             s_, r, done, _, _ = env.step(action)
@@ -39,3 +38,4 @@ if __name__ == '__main__':
     plt.plot(xs, ys)
     
     
+
