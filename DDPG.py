@@ -13,10 +13,9 @@ from torch import nn
 from collections import deque
 import gym
 import random
-import stochastic_process
 import numpy as np
 class Actor(nn.Module):
-    def __init__(self, env, hidden = 300, lr = 0.001):
+    def __init__(self, device, env, hidden = 300, lr = 0.001):
         super().__init__()
         self.linear1 = nn.Linear(env.observation_space.shape[0], 
                                            hidden + 100)
@@ -27,16 +26,9 @@ class Actor(nn.Module):
         self.relu = nn.ReLU()
         self.linear2 = nn.Linear(hidden + 100, hidden)
         self.linear3 = nn.Linear(hidden, env.action_space.shape[0])
-
+        self.device=device
         self.tanh = nn.Tanh()
-        f2 = 1./np.sqrt(self.linear2.weight.data.size()[0])
-        nn.init.uniform_(self.linear2.weight.data, -f2, f2)
-        nn.init.uniform_(self.linear2.bias.data, -f2, f2)
-        f3 = 0.003
-        nn.init.uniform_(self.linear3.weight.data, -f3, f3)
-        nn.init.uniform_(self.linear3.bias.data, -f3, f3)
         self.optim = optim.Adam(self.parameters(), lr = lr)
-        self.stochastic_process = stochastic_process.OrnsteinUhlenbeckProcess()
     def forward(self, state):
         state=state.float()
         x = self.linear1(state)
@@ -45,8 +37,8 @@ class Actor(nn.Module):
         x = self.relu(x)
         x = self.linear3(x)
         x = self.tanh(x)
-        return x + torch.tensor(self.stochastic_process.sample(),
-                                dtype=torch.float32).cuda()    
+        return x + torch.normal(mean=torch.tensor([0.]), 
+                                std=torch.tensor([0.1])).to(self.device)
     
 class Critic(nn.Module):
     def __init__(self, env, hidden=300, lr = 0.001):
@@ -58,15 +50,6 @@ class Critic(nn.Module):
                                  
         self.linear3 = nn.Linear(hidden, 1)
         self.optim = optim.Adam(self.parameters(), lr = lr)
-        f1 = 1./np.sqrt(self.linear1.weight.data.size()[0])
-        nn.init.uniform_(self.linear1.weight.data, -f1, f1)
-        nn.init.uniform_(self.linear1.bias.data, -f1, f1)
-        f2 = 1./np.sqrt(self.linear2.weight.data.size()[0])
-        nn.init.uniform_(self.linear2.weight.data, -f2, f2)
-        nn.init.uniform_(self.linear2.bias.data, -f2, f2)
-        f3 = 1./np.sqrt(self.linear3.weight.data.size()[0])
-        nn.init.uniform_(self.linear3.weight.data, -f3, f3)
-        nn.init.uniform_(self.linear3.bias.data, -f3, f3)
 
 
     def forward(self, state, action):
@@ -85,9 +68,9 @@ class DDPG:
         self.env = env
         self.device = torch.device("cuda" if\
         torch.cuda.is_available() else "cpu")
-        self.actor = Actor(env=self.env).to(self.device)
+        self.actor = Actor(env=self.env,device=self.device).to(self.device)
         self.critic = Critic(env=self.env).to(self.device)
-        self.target_actor = Actor(env=self.env).to(self.device)
+        self.target_actor = Actor(env=self.env,device=self.device).to(self.device)
         self.target_critic = Critic(env=self.env).to(self.device)
         self.gamma = 0.99
         self.tau = 0.005
@@ -178,3 +161,4 @@ class DDPG:
             self.soft_update()
         
         self.count += 1
+
