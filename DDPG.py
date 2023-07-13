@@ -19,9 +19,6 @@ class Actor(nn.Module):
         super().__init__()
         self.linear1 = nn.Linear(env.observation_space.shape[0], 
                                            hidden + 100)
-        f1 = 1./np.sqrt(self.linear1.weight.data.size()[0])
-        nn.init.uniform_(self.linear1.weight.data, -f1, f1)
-        nn.init.uniform_(self.linear1.bias.data, -f1, f1)
 
         self.relu = nn.ReLU()
         self.linear2 = nn.Linear(hidden + 100, hidden)
