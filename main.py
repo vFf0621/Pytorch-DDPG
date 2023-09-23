@@ -28,7 +28,8 @@ if __name__ == '__main__':
             agent.replay_buffer.append((s, action, s_, r, done))
             s = s_
             episode_reward += r
-            agent.train()
+            if agent.batch_size < len(agent.replay_buffer):
+                agent.train()
         agent.reward_buffer.append(episode_reward)
         mean = np.mean(agent.reward_buffer)
         ys.append(mean)
