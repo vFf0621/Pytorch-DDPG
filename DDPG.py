@@ -80,7 +80,7 @@ class DDPG:
         self.action_high = torch.from_numpy(self.env.action_space.high).\
         to(self.device)
         self.count = 0
-        s = env.reset()[0]
+
     def act(self, state):
         if isinstance(state, np.ndarray):
             state = torch.from_numpy(state).to(self.device)
