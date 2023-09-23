@@ -15,50 +15,51 @@ import gym
 import random
 import numpy as np
 class Actor(nn.Module):
-    def __init__(self, device, env, hidden = 300, lr = 0.001):
+    def __init__(self, device, env, hidden = 300, lr = 0.001, num_layers=4):
         super().__init__()
-        self.linear1 = nn.Linear(env.observation_space.shape[0], 
-                                           hidden + 100)
-
-        self.relu = nn.ReLU()
-        self.linear2 = nn.Linear(hidden + 100, hidden)
-        self.linear3 = nn.Linear(hidden, env.action_space.shape[0])
+        info = []
+        info.append(env.observation_space.shape[0], 
+                                           hidden )
+        for i in range(num_layers):
+            if i != num_layers - 1:
+                info.append(nn.Linear(hidden, hidden)
+                info.append(nn.ReLU())
+            else:
+                info.append(nn.Linear(hidden, env.action_space.shape[0])
+                info.append(nn.Tanh())
+        self.net = nn.Sequential(*info)
+            
         self.device=device
         self.tanh = nn.Tanh()
         self.optim = optim.Adam(self.parameters(), lr = lr)
     def forward(self, state):
         state=state.float()
-        x = self.linear1(state)
-        x = self.relu(x)
-        x = self.linear2(x)
-        x = self.relu(x)
-        x = self.linear3(x)
-        x = self.tanh(x)
+        x = self.net(x)
         return x + torch.normal(mean=torch.tensor([0.]), 
                                 std=torch.tensor([0.1])).to(self.device)
     
 class Critic(nn.Module):
     def __init__(self, env, hidden=300, lr = 0.001):
         super().__init__()
-        self.linear1= nn.Linear(env.observation_space.shape[0]+ 
-                                env.action_space.shape[0], hidden + 100)
-        self.relu=nn.ReLU()
-        self.linear2 = nn.Linear(hidden + 100 , hidden)
-                                 
-        self.linear3 = nn.Linear(hidden, 1)
+        info = []
+        info.append(env.observation_space.shape[0] + env.action_space.shape[0], 
+                                           hidden )
+        for i in range(num_layers):
+            if i != num_layers - 1:
+                info.append(nn.Linear(hidden, hidden)
+                info.append(nn.ReLU())
+            else:
+                info.append(nn.Linear(hidden, env.action_space.shape[0])
+                info.append(nn.Identity())
+        self.net = nn.Sequential(*info)
         self.optim = optim.Adam(self.parameters(), lr = lr)
 
 
     def forward(self, state, action):
         if len(action.shape) < len(state.shape):
             action = action.unsqueeze(-1)
-        x = self.linear1(torch.cat([state, action], dim=1))
-        x = self.relu(x)
-        x = self.linear2(x)
-        x = self.relu(x)
-        x = self.linear3(x)
-
-        return x
+        x = torch.cat([state, action], dim=1)
+        return self.net(x)
   
 class DDPG:
     def __init__(self, env):
@@ -80,13 +81,6 @@ class DDPG:
         to(self.device)
         self.count = 0
         s = env.reset()[0]
-        for i in range(100):
-            done = False
-            while not done:
-                action = self.env.action_space.sample()
-                s_, reward, done, _, _ = self.env.step(action)
-                self.replay_buffer.append((s, action, s_, reward, done))
-                s = s_
     def act(self, state):
         if isinstance(state, np.ndarray):
             state = torch.from_numpy(state).to(self.device)
