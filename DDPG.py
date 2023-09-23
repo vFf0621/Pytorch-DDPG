@@ -62,7 +62,7 @@ class Critic(nn.Module):
         return self.net(x)
   
 class DDPG:
-    def __init__(self, env):
+    def __init__(self, env, BATCH_SIZE):
         self.env = env
         self.device = torch.device("cuda" if\
         torch.cuda.is_available() else "cpu")
@@ -80,6 +80,7 @@ class DDPG:
         self.action_high = torch.from_numpy(self.env.action_space.high).\
         to(self.device)
         self.count = 0
+        self.batch_size=BATCH_sIZE
 
     def act(self, state):
         if isinstance(state, np.ndarray):
@@ -100,7 +101,7 @@ class DDPG:
              target_param.data.copy_(self.tau * param.data + 
                                 (1 - self.tau) * target_param.data)
     def sample(self, batch_size = 100):
-        t = random.sample(self.replay_buffer, batch_size)
+        t = random.sample(self.replay_buffer, self.batch_size)
         actions = []
         states = []
         dones = []
