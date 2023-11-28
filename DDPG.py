@@ -1,15 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on Sun Sep 11 10:29:38 2022
-
-@author: guanfei1
-"""
-
-
-import torch
-from torch import optim
-from torch import nn
 from collections import deque
 import gym
 import random
@@ -18,14 +6,16 @@ class Actor(nn.Module):
     def __init__(self, device, env, hidden = 300, lr = 0.001, num_layers=3):
         super().__init__()
         info = []
-        info.append(env.observation_space.shape[0], 
-                                           hidden )
+        info.append(nn.Linear(env.observation_space.shape[0], 
+                                           hidden ))
+        info.append(nn.ReLU())
         for i in range(num_layers):
             if i != num_layers - 1:
-                info.append(nn.Linear(hidden, hidden)
+                info.append(nn.Linear(hidden, hidden))
                 info.append(nn.ReLU())
             else:
-                info.append(nn.Linear(hidden, env.action_space.shape[0])
+                print(env.action_space)
+                info.append(nn.Linear(hidden, env.action_space.shape[0]))
                 info.append(nn.Tanh())
         self.net = nn.Sequential(*info)
             
@@ -33,7 +23,7 @@ class Actor(nn.Module):
         self.tanh = nn.Tanh()
         self.optim = optim.Adam(self.parameters(), lr = lr)
     def forward(self, state):
-        state=state.float()
+        x=state.float()
         x = self.net(x)
         return x + torch.normal(mean=torch.tensor([0.]), 
                                 std=torch.tensor([0.1])).to(self.device)
@@ -42,14 +32,14 @@ class Critic(nn.Module):
     def __init__(self, env, hidden=300, lr = 0.001, num_layers=3):
         super().__init__()
         info = []
-        info.append(env.observation_space.shape[0] + env.action_space.shape[0], 
-                                           hidden )
+        info.append(nn.Linear(env.observation_space.shape[0] + env.action_space.shape[0], 
+                                           hidden ))
         for i in range(num_layers):
             if i != num_layers - 1:
-                info.append(nn.Linear(hidden, hidden)
+                info.append(nn.Linear(hidden, hidden))
                 info.append(nn.ReLU())
             else:
-                info.append(nn.Linear(hidden, env.action_space.shape[0])
+                info.append(nn.Linear(hidden, 1))
                 info.append(nn.Identity())
         self.net = nn.Sequential(*info)
         self.optim = optim.Adam(self.parameters(), lr = lr)
@@ -80,11 +70,10 @@ class DDPG:
         self.action_high = torch.from_numpy(self.env.action_space.high).\
         to(self.device)
         self.count = 0
-        self.batch_size=BATCH_sIZE
+        self.batch_size=BATCH_SIZE
 
     def act(self, state):
-        if isinstance(state, np.ndarray):
-            state = torch.from_numpy(state).to(self.device)
+        state = torch.from_numpy(state).to(self.device)
         state = state.to(self.device)
         
         return torch.clip(self.actor(state), -self.action_high, 
@@ -100,7 +89,7 @@ class DDPG:
                         self.target_actor.parameters()):
              target_param.data.copy_(self.tau * param.data + 
                                 (1 - self.tau) * target_param.data)
-    def sample(self, batch_size = 100):
+    def sample(self):
         t = random.sample(self.replay_buffer, self.batch_size)
         actions = []
         states = []
@@ -134,7 +123,7 @@ class DDPG:
         states, actions, states_, rewards, dones = self.sample()
         target_action = self.target_actor(states_) + \
         torch.clip(torch.normal(torch.tensor([0.]), torch.tensor([0.2])), -0.5, 0.5).to(self.device)
-        q_ = self.target_critic(states_, self.target_actor(states_)).view(-1)
+        q_ = self.target_critic(states_, target_action)
         q_[dones]=0.
         with torch.no_grad(): 
            target_q = rewards + self.gamma * q_
